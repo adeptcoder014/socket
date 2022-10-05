@@ -9,7 +9,7 @@ import {
   Input,
   FormControl
 } from "@mui/material";
-import io from "socket.io-client";
+import {io} from "socket.io-client";
 import { useEffect, useState } from "react";
 //================================================
 
@@ -18,9 +18,10 @@ function App() {
   const [data, setData] = useState({
     d: ""
   })
-  const socket = io("http://localhost:3001");
-  socket.emit("connection", (socket) => {
-    console.log("--->", socket)
+  const socket = io("http://localhost:5000");
+
+  socket.on("connect", () => {
+    setData(socket.id)
   })
   return (
     <>
