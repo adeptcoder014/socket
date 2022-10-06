@@ -9,20 +9,30 @@ import {
   Input,
   FormControl
 } from "@mui/material";
-import {io} from "socket.io-client";
-import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 //================================================
 
 function App() {
-  const [packet, setPacket] = useState([])
-  const [data, setData] = useState({
-    d: ""
-  })
+
   const socket = io("http://localhost:5000");
 
   socket.on("connect", () => {
-    setData(socket.id)
+    console.log("--->", socket.id)
   })
+
+  socket.on("client", (res) => console.log("server:", res))
+
+  const handleSubmit = (event) => {
+    document.getElementById('inputField').value = ""
+    event.preventDefault();
+  }
+
+  const append = (value) => {
+    let div = document.createElement("div")
+    div.textContent = value
+    document.getElementById("container").append(div)
+  }
+
   return (
     <>
 
@@ -45,46 +55,26 @@ function App() {
             justifyContent: "flex-end",
             alignItems: "flex-end"
           }}>
-          <ul>
-            {packet.map(x =>
-
-              <li>
-                {x}
-              </li>
-
-
-            )}
-          </ul>
+          <div id="container">
+          </div>
         </Card>
-        {/* ============================================================= */}
-        <FormGroup>
-          <FormControl
-            type="text"
-            value={packet}
-            autoFocus
-          />
-          <Input
-            placeholder="Type a message here ..."
-            id="x"
-            onChange={(e) =>
-              setData({
-                ...data,
-                d: e.target.value
-
-              })
-            } />
+        <form onSubmit={handleSubmit}>
+          <label>
+            Name:
+            <input id="inputField" type="text"/>
+          </label>
           <Button
             type="submit"
             onClick={() => {
-              if (document.getElementById("x").value === '') return
-              setPacket(packet.concat(data.d))
-              document.getElementById("x").value = ''
+              if (document.getElementById("inputField").value === '') return
+              let message = document.getElementById("inputField").value
+              append(message)
+              socket.emit("server", message)
             }}
           >
             Send
           </Button>
-
-        </FormGroup>
+        </form>
       </Box>
     </>
   );
