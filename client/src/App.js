@@ -10,23 +10,49 @@ import {
   FormControl
 } from "@mui/material";
 import { io } from "socket.io-client";
+import { useEffect, useState } from "react";
 //================================================
 
 function App() {
 
+  const [id, setId] = useState("")
+  const [server, setServer] = useState("")
+
+
   const socket = io("http://localhost:5000");
+  useEffect(() => {
 
-  socket.on("connect", () => {
-    console.log("--->", socket.id)
-  })
+    socket.on("connect", () => {
+      setId(socket.id)
+    })
+    socket.on("mesFromServer", (res) => setServer(res))
 
-  socket.on("client", (res) => console.log("server:", res))
+    // return () => socket.emit('end'); //Close socket on UNMOUNT
+
+  }, [])
+
 
   const handleSubmit = (event) => {
-    document.getElementById('inputField').value = ""
-    event.preventDefault();
-  }
+    let message = document.getElementById("inputField").value
+    let room = document.getElementById("inputField1").value
 
+    append(message)
+    socket.emit("send-message-to-server", message, room)
+    event.preventDefault();
+    document.getElementById('inputField').value = ""
+    if (document.getElementById("inputField").value === '') return
+
+
+  }
+  const joinRoom = () => {
+
+      let room = document.getElementById("inputField1").value
+      console.log(room)
+      socket.emit("join-room", room)
+
+    
+  }
+  //===============================
   const append = (value) => {
     let div = document.createElement("div")
     div.textContent = value
@@ -35,6 +61,9 @@ function App() {
 
   return (
     <>
+
+      {/* ============================================================= */}
+      <Typography id="Label">{server}</Typography>
 
       <Box
         sx={{
@@ -45,7 +74,7 @@ function App() {
           flexDirection: "column"
         }}
       >
-        {/* ============================================================= */}
+        <Typography id="Label">Connected with : {id}</Typography>
         <Card
           sx={{
             backgroundColor: "pink",
@@ -55,25 +84,30 @@ function App() {
             justifyContent: "flex-end",
             alignItems: "flex-end"
           }}>
-          <div id="container">
+          <div id="container" style={{ color: "gray", fontSize: 21, padding: 5 }}>
           </div>
         </Card>
         <form onSubmit={handleSubmit}>
-          <label>
-            Name:
-            <input id="inputField" type="text"/>
-          </label>
-          <Button
-            type="submit"
-            onClick={() => {
-              if (document.getElementById("inputField").value === '') return
-              let message = document.getElementById("inputField").value
-              append(message)
-              socket.emit("server", message)
-            }}
-          >
-            Send
-          </Button>
+          <Box sx={{ display: "flex", flexDirection: "column" }}>
+            <TextField id="inputField" type="text" sx={{ mt: 5 }} />
+            <Button
+              type="submit"
+
+            >
+              Send
+            </Button>
+            <TextField label='room' id="inputField1" type="text" sx={{ mt: 5 }} />
+
+            <Button
+              type="submit"
+              id='room'
+              onClick={joinRoom}
+
+            >
+              Room
+            </Button>
+
+          </Box>
         </form>
       </Box>
     </>
